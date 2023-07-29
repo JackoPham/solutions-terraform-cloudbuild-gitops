@@ -13,4 +13,23 @@
 # limitations under the License.
 
 
-variable "project" {}
+variable "project" {
+    default = "tuna-gcp"
+}
+
+
+variable "region" {
+    default = "asia-southeast2"
+}
+
+variable "github_repository" {
+    default = "sample-api"
+}
+
+variable "github_owner" {
+    default = "Tuna-Packages"
+}
+
+variable "github_branch" {
+    default = "^main$"
+}
