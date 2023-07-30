@@ -31,6 +31,10 @@ resource "google_storage_bucket" "static" {
  uniform_bucket_level_access = true
 }
 
+module "bastion" {
+  source  = "../../modules/bastion"
+}
+
 //  Unse
 # module "vpc" {
 #   source  = "../../modules/vpc"
