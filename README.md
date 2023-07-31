@@ -24,6 +24,12 @@ Once you have tested your app (in this example an apache2 http server), you can 
 1.  Configure an apache2 http server on network '**prod**' and subnet '**prod**-subnet-01'
 2.  Open port 80 on firewall for this http server
 
+Note: Need to run this command before run create cluster
+
+```
+gcloud services enable container.googleapis.com
+```
+
 ```bash
 cd ../prod
 terraform init

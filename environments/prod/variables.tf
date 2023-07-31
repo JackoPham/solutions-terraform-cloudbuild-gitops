@@ -12,5 +12,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+variable "project_id" {
+  type = string
+  description = "The ID of the project to create resources in"
+  default = "tuna-practice"
+}
 
-variable "project" {}
+variable "region" {
+  type = string
+  description = "The region to use"
+  default = "asia-southeast1"
+}
+
+variable "main_zone" {
+  type = string
+  description = "The zone to use as primary"
+  default = "asia-southeast1-a"
+}
+
+
+# variable "cluster_node_zones" {
+#   type = list(string)
+#   description = "The zones where Kubernetes cluster worker nodes should be located"
+#   default = "asia-southeast1-a"
+# }
+
+# variable "credentials_file_path" {
+#   type = string
+#   description = "The credentials JSON file used to authenticate with GCP"
+# }
+
+# variable "service_account" {
+#   type = string
+#   description = "The GCP service account"
+# }
