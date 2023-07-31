@@ -1,0 +1,109 @@
+locals {
+  hostname = format("%s-bastion", var.bastion_name)
+}
+
+// Dedicated service account for the Bastion instance.
+resource "google_service_account" "bastion" {
+  project       = var.project_id
+  account_id   = format("%s-bastion-sa", var.bastion_name)
+  display_name = "GKE Bastion Service Account"
+}
+
+// Allow access to the Bastion Host via SSH.
+resource "google_compute_firewall" "bastion-ssh" {
+  name          = format("%s-bastion-ssh", var.bastion_name)
+  network       = var.network_name
+  direction     = "INGRESS"
+  project       = var.project_id
+  source_ranges = ["0.0.0.0/0"] // TODO: Restrict further.
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+
+  target_tags = ["bastion"]
+}
+
+// The user-data script on Bastion instance provisioning.
+data "template_file" "startup_script" {
+  template = <<-EOF
+  sudo apt-get update -y
+  sudo apt-get install -y tinyproxy
+  curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl" 
+  chmod +x kubectl 
+  sudo cp kubectl /usr/local/bin
+  EOF
+}
+
+data "google_compute_subnetwork" "subnet" {
+  name          = var.subnet_name                                        
+  project       = var.project_id
+  region        = var.region
+}
+
+// The Bastion host.
+resource "google_compute_instance" "bastion" {
+  name         = local.hostname
+  machine_type = "e2-small"
+  zone         = var.zone
+  project      = var.project_id
+  tags         = ["bastion"]
+
+  boot_disk {
+    initialize_params {
+      image = "debian-cloud/debian-10"
+    }
+  }
+
+  shielded_instance_config {
+    enable_secure_boot          = false
+    enable_vtpm                 = true
+    enable_integrity_monitoring = true
+  }
+
+  // Install tinyproxy on startup.
+  metadata_startup_script = data.template_file.startup_script.rendered
+
+  network_interface {
+    subnetwork = "${data.google_compute_subnetwork.subnet.self_link}"
+
+    access_config {
+      // Not setting "nat_ip", use an ephemeral external IP.
+      network_tier = "STANDARD"
+    }
+  }
+
+  // Allow the instance to be stopped by Terraform when updating configuration.
+  allow_stopping_for_update = true
+
+  service_account {
+    email  = google_service_account.bastion.email
+    scopes = ["cloud-platform"]
+  }
+
+#    provisioner "local-exec" {
+#     command = <<EOF
+#         READY=""
+#         for i in $(seq 1 20); do
+#           if gcloud compute ssh ${local.hostname} --project ${var.project_id} --zone ${var.region}-a --command uptime; then
+#             READY="yes"
+#             break;
+#           fi
+#           echo "Waiting for ${local.hostname} to initialize..."
+#           sleep 10;
+#         done
+#         if [[ -z $READY ]]; then
+#           echo "${local.hostname} failed to start in time."
+#           echo "Please verify that the instance starts and then re-run `terraform apply`"
+#           exit 1
+#         fi
+# EOF
+#   }
+
+  scheduling {
+    # preemptible       = true
+    automatic_restart = false
+    provisioning_model = "STANDARD"
+  }
+}

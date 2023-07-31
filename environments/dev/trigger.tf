@@ -53,6 +53,10 @@ resource "google_cloudbuild_trigger" "sample-api-trigger" {
         _REGISTRY_URL   = "${var.region}-docker.pkg.dev"
         _REGION         = var.region
         _PROJECT_NAME   = var.project
+        _GKE_NAMESPACE  = "tuna-tech-namespace"
+        _ZONE           = var.zone
+        _CLUSTER        = "tuna-cluster"
+        _BASTION        = "tuna-bastion"
     }
 
     filename = "cloudbuild.yaml"

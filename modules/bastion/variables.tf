@@ -13,26 +13,24 @@
 # limitations under the License.
 
 
-variable "project" {
+variable "project_id" {
     default = "tuna-gcp"
 }
-
-
-variable "region" {
-    default = "asia-southeast2"
+variable "subnet_name" {
+    default = "tuna-subnet"
 }
+variable "network_name" {
+    default = "tuna-network"
+}
+
+variable "bastion_name" {
+  default ="tuna"
+}
+
 variable "zone" {
     default = "asia-southeast2-a"
 }
 
-variable "github_repository" {
-    default = "sample-api"
-}
-
-variable "github_owner" {
-    default = "Tuna-Packages"
-}
-
-variable "github_branch" {
-    default = "^main$"
+variable "region" {
+    default = "asia-southeast2"
 }
