@@ -16,7 +16,9 @@
 locals {
   env = "prod"
 }
-
+data "google_project" "project" {
+    project_id = var.project_id
+}
 provider "google" {
   // Only needed if you use a service account key
   # credentials = file(var.credentials_file_path)
@@ -28,9 +30,8 @@ provider "google" {
 
 resource "google_project_service" "service" {
     for_each = toset([
-        # "artifactregistry.googleapis.com",
         "compute.googleapis.com",
-        "container.googleapis.com"
+        "container.googleapis.com",
     ])
 
     service = each.key
@@ -60,6 +61,7 @@ module "bastion" {
 module "google_kubernetes_cluster" {
   source = "../../modules/prod/kubernetes_cluster"
 
+cluster_name = var.cluster_name
   project_id                 = var.project_id
   region                     = var.region
   main_zone                  = var.main_zone
@@ -81,4 +83,20 @@ resource "google_project_iam_member" "bastion-iam" {
   role = each.key
   project = var.project_id
   member  = "serviceAccount:${module.bastion.name}-sa@${var.project_id}.iam.gserviceaccount.com"
+}
+
+module "cloudbuild" {
+  source = "../../modules/prod/cloudbuild"
+
+  project_id   = var.project_id
+  project_number = data.google_project.project.number
+  region       = var.region
+  main_zone          = var.main_zone
+  cluster_name = module.google_kubernetes_cluster.name
+  bastion = "${module.bastion.name}-sa"
+  trigger_name = "api-trigger"
+  github_branch = "^main$"
+  github_owner = "Tuna-Packages"
+  github_repository = "sample-api"
+  gke_namespace = "tuna-sample-namespace"
 }

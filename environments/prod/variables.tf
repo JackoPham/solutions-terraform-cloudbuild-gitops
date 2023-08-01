@@ -30,6 +30,10 @@ variable "main_zone" {
   default = "asia-southeast1-a"
 }
 
+variable "cluster_name" {
+  default = "tuna-cluster"
+}
+
 
 # variable "cluster_node_zones" {
 #   type = list(string)
